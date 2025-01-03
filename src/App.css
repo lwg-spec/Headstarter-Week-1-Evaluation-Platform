@@ -112,3 +112,27 @@ button:hover {
   border-radius: 4px;
   border: 1px solid #333;
 }
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ef9a9a;
+}
+
+.result-item {
+  background-color: #333;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 4px;
+}
+
+.result-item h3 {
+  margin-top: 0;
+}
+
+.result-item p {
+  margin: 0.5rem 0;
+}
