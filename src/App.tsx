@@ -1,17 +1,46 @@
 import { useState } from 'react'
 import './App.css'
+import { LLMService } from './services/llmService'
 
 interface TestCase {
   input: string;
   expectedOutput: string;
   score?: number;
+  actualOutput?: string;
 }
+
+const llmService = new LLMService(import.meta.env.VITE_OPENAI_API_KEY);
 
 function App() {
   const [systemPrompt, setSystemPrompt] = useState('')
   const [testCases, setTestCases] = useState<TestCase[]>([
     { input: '', expectedOutput: '' }
   ])
+  const [results, setResults] = useState<TestCase[]>([])
+  const [isRunning, setIsRunning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const runExperiment = async () => {
+    setIsRunning(true)
+    setError(null)
+    
+    try {
+      const experimentResults = await llmService.runExperiment(
+        systemPrompt,
+        testCases
+      )
+
+      setResults(experimentResults)
+      
+      const averageScore = experimentResults.reduce((acc, result) => acc + (result.score ?? 0), 0) / experimentResults.length
+      console.log(`Average Score: ${averageScore}`)
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsRunning(false)
+    }
+  }
 
   const addTestCase = () => {
     setTestCases([...testCases, { input: '', expectedOutput: '' }])
@@ -63,13 +92,36 @@ function App() {
 
       <div className="controls">
         <button onClick={addTestCase}>Add Test Case</button>
-        <button>Run Experiment</button>
+        <button 
+          onClick={runExperiment} 
+          disabled={isRunning}
+        >
+          {isRunning ? 'Running...' : 'Run Experiment'}
+        </button>
       </div>
+
+      {error && (
+        <div className="error">
+          Error: {error}
+        </div>
+      )}
 
       <div className="results">
         <h2>Results</h2>
-        <p>Average Score: N/A</p>
-        {/* Results will be displayed here */}
+        {results.length > 0 && (
+          <>
+            <p>Average Score: {(results.reduce((acc, r) => acc + (r.score ?? 0), 0) / results.length).toFixed(2)}</p>
+            {results.map((result, index) => (
+              <div key={index} className="result-item">
+                <h3>Test Case {index + 1}</h3>
+                <p>Input: {result.input}</p>
+                <p>Expected: {result.expectedOutput}</p>
+                <p>Actual: {result.actualOutput}</p>
+                <p>Score: {result.score}</p>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   )
